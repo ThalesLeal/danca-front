@@ -1,0 +1,4 @@
+<template><div class="page-container"><h2>Entradas</h2><DataTable title="Entradas" :columns="[{key:'descricao',label:'Descrição'},{key:'valor',label:'Valor'},{key:'data',label:'Data'}]" :data="entradas.results||entradas" :pagination="{next:entradas.next,previous:entradas.previous}" @next="go(entradas.next)" @prev="go(entradas.previous)"/></div></template>
+<script setup>import{reactive,onMounted}from'vue';import api from'../services/api';import DataTable from'../components/DataTable.vue';const entradas=reactive({});async function fetchEntradas(url){const{data}=await api.get(url||'/entradas/');Object.assign(entradas,data)};async function go(url){if(url)await fetchEntradas(url.replace('http://127.0.0.1:8000/api',''))};onMounted(()=>fetchEntradas())</script>
+<style scoped>.page-container{display:grid;gap:24px}</style>
+

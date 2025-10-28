@@ -1,0 +1,4 @@
+<template><div class="page-container"><h2>Planejamentos</h2><DataTable title="Planejamentos" :columns="[{key:'descricao',label:'Descrição'},{key:'valor_planejado',label:'Valor'},{key:'status',label:'Status'}]" :data="planejamentos.results||planejamentos" :pagination="{next:planejamentos.next,previous:planejamentos.previous}" @next="go(planejamentos.next)" @prev="go(planejamentos.previous)"/></div></template>
+<script setup>import{reactive,onMounted}from'vue';import api from'../services/api';import DataTable from'../components/DataTable.vue';const planejamentos=reactive({});async function fetchPlanejamentos(url){const{data}=await api.get(url||'/planejamentos/');Object.assign(planejamentos,data)};async function go(url){if(url)await fetchPlanejamentos(url.replace('http://127.0.0.1:8000/api',''))};onMounted(()=>fetchPlanejamentos())</script>
+<style scoped>.page-container{display:grid;gap:24px}</style>
+
