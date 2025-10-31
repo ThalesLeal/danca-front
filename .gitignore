@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Arquivos de documentação local (não versionar)
+PARA_QUE_SERVE_VERSIONAMENTO.md
+VERSIONAMENTO.md
+VERSION_SUMMARY.md

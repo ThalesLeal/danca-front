@@ -2,13 +2,19 @@
   <div v-if="show" class="payment-modal-overlay" @click="close">
     <div class="payment-modal-content" @click.stop>
       <div class="payment-modal-header">
-        <h4>Pagamento de Inscrição</h4>
+        <h4>{{ mode === 'pedido' ? 'Pagamento de Pedido' : 'Pagamento de Inscrição' }}</h4>
         <button @click="close" class="close-btn">&times;</button>
       </div>
       <div class="payment-modal-body">
         <div class="inscricao-info">
-          <h5>{{ inscricao.nome }}</h5>
-          <p>Valor Total: <strong>R$ {{ formatMoney(inscricao.valor_total) }}</strong></p>
+          <template v-if="mode === 'pedido'">
+            <h5>Pedido #{{ pedido?.id }}</h5>
+            <p>Valor: <strong>R$ {{ formatMoney(pedido?.valor_venda) }}</strong></p>
+          </template>
+          <template v-else>
+            <h5>{{ inscricao.nome }}</h5>
+            <p>Valor Total: <strong>R$ {{ formatMoney(inscricao.valor_total) }}</strong></p>
+          </template>
         </div>
 
         <!-- QR Code PIX -->
@@ -99,7 +105,9 @@ import api from '../services/api'
 
 const props = defineProps({
   show: Boolean,
-  inscricao: Object
+  mode: { type: String, default: 'inscricao' }, // 'inscricao' | 'pedido'
+  inscricao: Object,
+  pedido: Object,
 })
 
 const emit = defineEmits(['close', 'success'])
@@ -144,12 +152,11 @@ async function processPayment() {
   try {
     const dadosPagamento = tipoPagamento.value === 'pix' ? {} : dadosCartao
     
-    const response = await api.post('/pagamentos/processar/', {
-      inscricao_id: props.inscricao.id,
-      gateway: gateway.value,
-      tipo_pagamento: tipoPagamento.value,
-      dados_pagamento: dadosPagamento
-    })
+    const endpoint = props.mode === 'pedido' ? '/pedidos/processar/' : '/pagamentos/processar/'
+    const payload = props.mode === 'pedido'
+      ? { pedido_id: props.pedido.id, gateway: gateway.value, tipo_pagamento: tipoPagamento.value, dados_pagamento: dadosPagamento }
+      : { inscricao_id: props.inscricao.id, gateway: gateway.value, tipo_pagamento: tipoPagamento.value, dados_pagamento: dadosPagamento }
+    const response = await api.post(endpoint, payload)
     
     if (response.data.success) {
       if (response.data.qr_code_base64) {

@@ -244,13 +244,19 @@ async function handlePhotoUpload(event) {
   formData.append('foto', file)
 
   try {
-    const { data } = await api.put('/auth/user/profile/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    const { data } = await api.put('/auth/user/profile/', formData)
+    // Atualizar os dados do usuário com a resposta
     Object.assign(user, data)
+    // Recarregar o perfil para garantir que temos os dados mais recentes
+    await loadUserProfile()
     alert('Foto atualizada com sucesso!')
   } catch (error) {
-    alert('Erro ao atualizar foto: ' + (error.response?.data?.detail || error.message))
+    console.error('Erro ao atualizar foto:', error)
+    alert('Erro ao atualizar foto: ' + (error.response?.data?.detail || error.response?.data?.error || error.message))
+  }
+  // Limpar o input para permitir selecionar o mesmo arquivo novamente
+  if (fileInput.value) {
+    fileInput.value.value = ''
   }
 }
 

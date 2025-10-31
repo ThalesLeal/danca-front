@@ -1,6 +1,55 @@
 <template>
   <div class="page-container">
-    <h2>Inscrições</h2>
+    <!-- Banner -->
+    <div class="welcome-banner">
+      <div class="welcome-content">
+        <h1><i class="bi bi-person-plus"></i> Gestão de Inscrições</h1>
+        <p>Cadastre e gerencie participantes dos seus eventos de forma simples</p>
+      </div>
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-icon">
+          <i class="bi bi-people"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Total de Inscrições</h3>
+          <p class="stat-value">{{ stats.totalInscricoes }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card com-foto">
+        <div class="stat-icon">
+          <i class="bi bi-camera"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Com Foto</h3>
+          <p class="stat-value">{{ stats.inscricoesComFoto }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card pagas">
+        <div class="stat-icon">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Pagas</h3>
+          <p class="stat-value">{{ stats.inscricoesPagas }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card pendentes">
+        <div class="stat-icon">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Pendentes</h3>
+          <p class="stat-value">{{ stats.inscricoesPendentes }}</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Modal Criar/Editar -->
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
@@ -212,6 +261,13 @@ const inscricoes = reactive({})
 const categorias = reactive({})
 const lotes = reactive({})
 const form = reactive({ id: null, nome: '', cpf: '', categoria: null, lote: null, cep: '', municipio: '', uf: '', desconto: 0, numero_parcelas: 1 })
+
+const stats = reactive({
+  totalInscricoes: 0,
+  inscricoesComFoto: 0,
+  inscricoesPagas: 0,
+  inscricoesPendentes: 0
+})
 const showModal = ref(false)
 const showViewModal = ref(false)
 const showPaymentModal = ref(false)
@@ -230,6 +286,16 @@ async function fetchInscricoes(url = null, search = '') {
   }
   const { data } = await api.get(endpoint)
   Object.assign(inscricoes, data)
+  updateStats()
+}
+
+function updateStats() {
+  const inscricoesList = inscricoes.results || inscricoes || []
+  stats.totalInscricoes = inscricoesList.length
+  stats.inscricoesComFoto = inscricoesList.filter(i => i.foto_url).length
+  // Nota: A verificação de pagas/pendentes precisa de dados dos pagamentos, simplificando aqui
+  stats.inscricoesPagas = 0
+  stats.inscricoesPendentes = 0
 }
 
 function debounceSearch() {
@@ -357,7 +423,76 @@ onMounted(async () => { await Promise.all([fetchInscricoes(), fetchCategorias(),
 
 <style scoped>
 .page-container { padding: 0; }
-h2 { font-size: 1.75rem; color: #2c3e50; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 3px solid #667eea; }
+
+/* Banner */
+.welcome-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 48px 40px;
+  margin-bottom: 32px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  color: white;
+}
+.welcome-content h1 {
+  font-size: 2.5rem;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.welcome-content p {
+  font-size: 1.125rem;
+  margin: 0;
+  opacity: 0.95;
+}
+
+/* Grid de Estatísticas */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+}
+.stat-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+.stat-card.total .stat-icon { background: linear-gradient(135deg, #e2e3f5 0%, #d1d3f9 100%); color: #4338ca; }
+.stat-card.com-foto .stat-icon { background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%); color: #0c5460; }
+.stat-card.pagas .stat-icon { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); color: #155724; }
+.stat-card.pendentes .stat-icon { background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); color: #856404; }
+.stat-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
+  color: #718096;
+  font-weight: 600;
+}
+.stat-value {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
 
 .list-section { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
 .header-actions { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-bottom: 2px solid #e1e5e9; }

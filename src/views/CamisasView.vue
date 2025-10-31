@@ -1,6 +1,55 @@
 <template>
   <div class="page-container">
-    <h2>Camisas</h2>
+    <!-- Banner -->
+    <div class="welcome-banner">
+      <div class="welcome-content">
+        <h1><i class="bi bi-tshirt"></i> Gestão de Camisas</h1>
+        <p>Controle seu estoque de camisas e acompanhe as vendas em tempo real</p>
+      </div>
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-icon">
+          <i class="bi bi-tshirt"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Total de Modelos</h3>
+          <p class="stat-value">{{ stats.totalCamisas }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card estoque">
+        <div class="stat-icon">
+          <i class="bi bi-box-seam"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Em Estoque</h3>
+          <p class="stat-value">{{ stats.totalEstoque }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card valor-total">
+        <div class="stat-icon">
+          <i class="bi bi-cash-stack"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Valor Total</h3>
+          <p class="stat-value">R$ {{ formatMoney(stats.valorTotalEstoque) }}</p>
+        </div>
+      </div>
+
+      <div class="stat-card baixo-estoque">
+        <div class="stat-icon">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div class="stat-info">
+          <h3>Baixo Estoque</h3>
+          <p class="stat-value">{{ stats.baixoEstoque }}</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Modal de Criação/Edição -->
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
@@ -116,9 +165,25 @@ const camisas = reactive({})
 const form = reactive({ id: null, descricao: '', tipo: '', quantidade: 0, valor_compra: 0, valor_venda: 0 })
 const showModal = ref(false)
 
+const stats = reactive({
+  totalCamisas: 0,
+  totalEstoque: 0,
+  valorTotalEstoque: 0,
+  baixoEstoque: 0
+})
+
 async function fetchCamisas(url = null) {
   const { data } = await api.get(url || '/camisas/?ordering=-data_cadastro')
   Object.assign(camisas, data)
+  updateStats()
+}
+
+function updateStats() {
+  const camisasList = camisas.results || camisas || []
+  stats.totalCamisas = camisasList.length
+  stats.totalEstoque = camisasList.reduce((sum, c) => sum + (c.quantidade || 0), 0)
+  stats.valorTotalEstoque = camisasList.reduce((sum, c) => sum + ((c.quantidade || 0) * (c.valor_venda || 0)), 0)
+  stats.baixoEstoque = camisasList.filter(c => (c.quantidade || 0) < 5).length
 }
 
 function edit(c) { 
@@ -181,7 +246,76 @@ onMounted(fetchCamisas)
 
 <style scoped>
 .page-container { padding: 0; }
-h2 { font-size: 1.75rem; color: #2c3e50; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 3px solid #667eea; }
+
+/* Banner */
+.welcome-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 48px 40px;
+  margin-bottom: 32px;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  color: white;
+}
+.welcome-content h1 {
+  font-size: 2.5rem;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.welcome-content p {
+  font-size: 1.125rem;
+  margin: 0;
+  opacity: 0.95;
+}
+
+/* Grid de Estatísticas */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+}
+.stat-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+.stat-card.total .stat-icon { background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); color: #856404; }
+.stat-card.estoque .stat-icon { background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%); color: #0c5460; }
+.stat-card.valor-total .stat-icon { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); color: #155724; }
+.stat-card.baixo-estoque .stat-icon { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); color: #721c24; }
+.stat-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 0.9rem;
+  color: #718096;
+  font-weight: 600;
+}
+.stat-value {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
 
 .list-section { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
 .header-actions { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-bottom: 2px solid #e1e5e9; }

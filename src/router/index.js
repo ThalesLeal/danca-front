@@ -12,11 +12,13 @@ import PlanejamentosView from '../views/PlanejamentosView.vue'
 import EntradasView from '../views/EntradasView.vue'
 import SaidasView from '../views/SaidasView.vue'
 import PagamentosView from '../views/PagamentosView.vue'
+import PedidosView from '../views/PedidosView.vue'
 import ResumoCaixaView from '../views/ResumoCaixaView.vue'
 import PerfilView from '../views/PerfilView.vue'
 import MeusPedidosView from '../views/MeusPedidosView.vue'
 import MeusEventosView from '../views/MeusEventosView.vue'
 import CalendarioView from '../views/CalendarioView.vue'
+import NotaFiscalView from '../views/NotaFiscalView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView, meta: { requiresAuth: true } },
@@ -33,12 +35,14 @@ const routes = [
   { path: '/entradas', name: 'entradas', component: EntradasView, meta: { requiresAuth: true, requiresSuperUser: true } },
   { path: '/saidas', name: 'saidas', component: SaidasView, meta: { requiresAuth: true, requiresSuperUser: true } },
   { path: '/pagamentos', name: 'pagamentos', component: PagamentosView, meta: { requiresAuth: true, requiresSuperUser: true } },
+  { path: '/pedidos', name: 'pedidos', component: PedidosView, meta: { requiresAuth: true, requiresSuperUser: true } },
   { path: '/resumo-caixa', name: 'resumo-caixa', component: ResumoCaixaView, meta: { requiresAuth: true, requiresSuperUser: true } },
   // Rotas para usuários normais
   { path: '/perfil', name: 'perfil', component: PerfilView, meta: { requiresAuth: true } },
   { path: '/meus-pedidos', name: 'meus-pedidos', component: MeusPedidosView, meta: { requiresAuth: true } },
   { path: '/meus-eventos', name: 'meus-eventos', component: MeusEventosView, meta: { requiresAuth: true } },
   { path: '/calendario', name: 'calendario', component: CalendarioView, meta: { requiresAuth: true } },
+  { path: '/nota/pedido/:id', name: 'nota-pedido', component: NotaFiscalView, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({

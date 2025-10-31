@@ -80,17 +80,17 @@
       <div class="orders-grid">
         <div v-for="pedido in pedidos" :key="pedido.id" class="order-card">
           <div class="order-header">
-            <h4>{{ getTipoPedidoDisplay(pedido.tipo_pedido) }}</h4>
+            <h4>Pedido #{{ pedido.id }}</h4>
             <span :class="['status-badge', getStatusClass(pedido.status)]">
               {{ getStatusDisplay(pedido.status) }}
             </span>
           </div>
           
           <div class="order-content">
-            <p v-if="pedido.evento"><strong>Evento:</strong> {{ pedido.evento.descricao }}</p>
-            <p v-if="pedido.camisa"><strong>Camisa:</strong> {{ getTipoCamisa(pedido.camisa.tipo) }} - {{ pedido.camisa.descricao }}</p>
-            <p><strong>Quantidade:</strong> {{ pedido.quantidade }}</p>
-            <p><strong>Valor Total:</strong> R$ {{ formatMoney(pedido.valor_total) }}</p>
+            <p v-if="pedido.camisa_descricao"><strong>Camisa:</strong> {{ pedido.camisa_descricao }}</p>
+            <p v-if="pedido.cor"><strong>Cor:</strong> {{ pedido.cor }}</p>
+            <p v-if="pedido.tamanho"><strong>Tamanho:</strong> {{ pedido.tamanho }}</p>
+            <p><strong>Valor:</strong> R$ {{ formatMoney(pedido.valor_venda) }}</p>
             <p v-if="pedido.observacoes"><strong>Observações:</strong> {{ pedido.observacoes }}</p>
             <p><strong>Data:</strong> {{ formatDate(pedido.data_pedido) }}</p>
           </div>
@@ -102,6 +102,9 @@
             <button v-if="pedido.status === 'pendente'" @click="payOrder(pedido)" class="btn-pay">
               <i class="bi bi-credit-card"></i> Pagar
             </button>
+            <router-link v-if="pedido.status === 'pago'" :to="`/nota/pedido/${pedido.id}`" class="btn-nota">
+              <i class="bi bi-file-earmark-text"></i> Visualizar Nota
+            </router-link>
           </div>
         </div>
 
@@ -114,18 +117,28 @@
         </div>
       </div>
     </div>
+
+    <PaymentModal 
+      :show="showPayment" 
+      mode="pedido"
+      :pedido="pedidoSelecionado" 
+      @close="showPayment = false" 
+      @success="onPaymentSuccess" />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import api from '../services/api'
+import PaymentModal from '../components/PaymentModal.vue'
 
 const pedidos = ref([])
 const eventosDisponiveis = ref([])
 const camisasDisponiveis = ref([])
 const showNewOrderModal = ref(false)
 const creating = ref(false)
+const showPayment = ref(false)
+const pedidoSelecionado = ref(null)
 
 const newOrder = reactive({
   tipo_pedido: '',
@@ -180,19 +193,24 @@ function closeNewOrderModal() {
 async function createOrder() {
   creating.value = true
   try {
-    const payload = {
-      tipo_pedido: newOrder.tipo_pedido,
-      quantidade: newOrder.quantidade,
-      observacoes: newOrder.observacoes
-    }
-
+    let payload = {}
     if (newOrder.tipo_pedido === 'inscricao') {
-      payload.evento_id = newOrder.evento_id
+      // TODO: implementar criação de inscrição por aqui se necessário
+      payload = { /* endpoint próprio de inscrições já existe */ }
+      throw new Error('Criação de inscrição via "Meus Pedidos" ainda não implementada.')
     } else if (newOrder.tipo_pedido === 'camisa') {
-      payload.camisa_id = newOrder.camisa_id
+      const userData = JSON.parse(localStorage.getItem('user_data') || '{}')
+      payload = {
+        nome_completo: userData.first_name || userData.username || 'Cliente',
+        cidade: '',
+        tipo_cliente: 'externo',
+        camisa: newOrder.camisa_id,
+        cor: 'preto',
+        tamanho: 'M',
+        observacoes: newOrder.observacoes || ''
+      }
+      await api.post('/pedidos/', payload)
     }
-
-    await api.post('/pedidos/', payload)
     await loadPedidos()
     closeNewOrderModal()
     alert('Pedido criado com sucesso!')
@@ -216,8 +234,28 @@ async function cancelOrder(pedido) {
 }
 
 function payOrder(pedido) {
-  // Implementar modal de pagamento
-  alert('Funcionalidade de pagamento será implementada em breve!')
+  pedidoSelecionado.value = pedido
+  showPayment.value = true
+}
+
+async function onPaymentSuccess(resultado) {
+  await loadPedidos()
+  showPayment.value = false
+  // Se tem nota fiscal, adicionar ao pedido atualizado
+  if (resultado?.nota_url) {
+    const pedidoAtualizado = pedidos.value.find(p => p.id === pedidoSelecionado.value?.id)
+    if (pedidoAtualizado) {
+      pedidoAtualizado.nota_url = resultado.nota_url
+    }
+  }
+}
+
+function downloadNota(pedido) {
+  if (pedido.nota_url) {
+    window.open(pedido.nota_url, '_blank')
+  } else {
+    alert('Nota fiscal ainda não está disponível')
+  }
 }
 
 function getTipoPedidoDisplay(tipo) {
@@ -300,12 +338,14 @@ h2 { font-size: 1.75rem; color: #2c3e50; margin-bottom: 24px; padding-bottom: 12
 .status-processando { background: #d1ecf1; color: #0c5460; }
 
 .order-content p { margin: 8px 0; color: #4a5568; font-size: 0.9rem; }
-.order-actions { display: flex; gap: 8px; margin-top: 16px; }
-.btn-cancel-order, .btn-pay { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+.order-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.btn-cancel-order, .btn-pay, .btn-nota { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
 .btn-cancel-order { background: #fed7d7; color: #c53030; }
 .btn-cancel-order:hover { background: #feb2b2; }
 .btn-pay { background: #c6f6d5; color: #2f855a; }
 .btn-pay:hover { background: #9ae6b4; }
+.btn-nota { background: #e6fffa; color: #2c7a7b; }
+.btn-nota:hover { background: #b2f5ea; }
 
 .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #a0aec0; }
 .empty-state i { font-size: 3rem; margin-bottom: 16px; display: block; }

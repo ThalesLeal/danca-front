@@ -3,6 +3,9 @@
     <div class="sidebar-content">
       <!-- Menu para Superusuários -->
       <ul v-if="isSuperUser" class="nav-menu">
+        <!-- PÁGINA INICIAL -->
+        <li><router-link to="/" class="nav-link"><i class="bi bi-house-door"></i><span>Página Inicial</span></router-link></li>
+        
         <!-- CADASTROS -->
         <li class="nav-item dropdown">
           <button class="nav-link" @click="toggleCollapse('cadastros')">
@@ -35,37 +38,16 @@
         <li><router-link to="/planejamentos" class="nav-link"><i class="bi bi-calendar-check"></i><span>Planejamentos</span></router-link></li>
 
         <!-- PEDIDOS -->
-        <li><router-link to="/pagamentos" class="nav-link"><i class="bi bi-cart"></i><span>Pedidos</span></router-link></li>
+        <li><router-link to="/pedidos" class="nav-link"><i class="bi bi-cart"></i><span>Pedidos</span></router-link></li>
 
         <!-- EVENTOS -->
         <li><router-link to="/eventos" class="nav-link"><i class="bi bi-calendar-event"></i><span>Eventos</span></router-link></li>
 
         <!-- CAIXA -->
-        <li class="nav-item dropdown">
-          <button class="nav-link" @click="toggleCollapse('caixa')">
-            <i class="bi bi-wallet2"></i>
-            <span>Caixa</span>
-            <i class="bi bi-chevron-down ms-auto"></i>
-          </button>
-          <ul v-if="openSection === 'caixa'" class="submenu">
-            <li><router-link to="/resumo-caixa"><i class="bi bi-graph-up"></i><span>Resumo</span></router-link></li>
-            <li><router-link to="/entradas"><i class="bi bi-arrow-up-circle"></i><span>Entradas</span></router-link></li>
-            <li><router-link to="/saidas"><i class="bi bi-arrow-down-circle"></i><span>Saídas</span></router-link></li>
-          </ul>
-        </li>
+        <li><router-link to="/resumo-caixa" class="nav-link"><i class="bi bi-wallet2"></i><span>Caixa</span></router-link></li>
 
         <!-- PAGAMENTOS -->
-        <li class="nav-item dropdown">
-          <button class="nav-link" @click="toggleCollapse('pagamentos')">
-            <i class="bi bi-cash-coin"></i>
-            <span>Pagamentos</span>
-            <i class="bi bi-chevron-down ms-auto"></i>
-          </button>
-          <ul v-if="openSection === 'pagamentos'" class="submenu">
-            <li><router-link to="/pagamentos"><i class="bi bi-receipt"></i><span>Lista de Pagamentos</span></router-link></li>
-            <li><router-link to="/pagamentos/novo"><i class="bi bi-plus-circle"></i><span>Novo Pagamento</span></router-link></li>
-          </ul>
-        </li>
+        <li><router-link to="/pagamentos" class="nav-link"><i class="bi bi-cash-coin"></i><span>Pagamentos</span></router-link></li>
       </ul>
 
       <!-- Menu para Usuários Normais -->
